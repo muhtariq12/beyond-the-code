@@ -1,5 +1,5 @@
 import { isTechFact, verifiedFacts } from "../profile/facts";
-import type { Entry, Fact, Job, Match, Preferences, Profile } from "../types";
+import type { Entry, Fact, Match, Preferences, Profile } from "../types";
 import { evaluateEligibility, seniorityRank, titleSeniority, type EligibilityInput } from "./eligibility";
 import { norm } from "../text";
 

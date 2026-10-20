@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Ctx } from "../ctx";
+import { UserError } from "../errors";
 import { audit } from "../ops/audit";
 import { UNTRUSTED_NOTICE, wrapUntrusted } from "../llm/safety";
 import { newId, sha256 } from "../store/store";
@@ -116,10 +117,10 @@ export async function generateCvVersion(ctx: Ctx, jobId: string, opts: GenerateO
   const job = await ctx.store.get("jobs", jobId);
   const profile = await ctx.store.get("profile", "profile");
   const match = await ctx.store.get("matches", `m_${jobId}`);
-  if (!job) throw new Error("Job not found");
-  if (!profile) throw new Error("Import your CV first");
-  if (!match) throw new Error("Score the job before generating a CV");
-  if (match.eligibility === "INELIGIBLE") throw new Error("Job failed eligibility; no CV is generated for ineligible jobs");
+  if (!job) throw new UserError("Job not found");
+  if (!profile) throw new UserError("Import your CV first");
+  if (!match) throw new UserError("Score the job before generating a CV");
+  if (match.eligibility === "INELIGIBLE") throw new UserError("Job failed eligibility; no CV is generated for ineligible jobs");
 
   const baseline = buildBaselineCv(profile);
   const generatorNotes: string[] = [];

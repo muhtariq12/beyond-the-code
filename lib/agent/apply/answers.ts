@@ -1,4 +1,5 @@
 import type { Ctx } from "../ctx";
+import { UserError } from "../errors";
 import { newId } from "../store/store";
 import { norm } from "../text";
 import { canonicalSkill, extractSkills } from "../skills";
@@ -85,7 +86,7 @@ export function draftFor(cat: AnswerCategory, q: string, profile: Profile): stri
 export async function answerQuestions(ctx: Ctx, applicationId: string, questions: { text: string; required?: boolean }[]): Promise<Answer[]> {
   const profile = await ctx.store.get("profile", "profile");
   const prefs = await ctx.store.get("preferences", "prefs");
-  if (!profile || !prefs) throw new Error("Profile and preferences are required");
+  if (!profile || !prefs) throw new UserError("Import and verify your profile first");
   const all = await ctx.store.list("answers");
   const out: Answer[] = [];
   for (const q of questions) {
@@ -120,7 +121,7 @@ export async function answerQuestions(ctx: Ctx, applicationId: string, questions
 
 export async function saveUserAnswer(ctx: Ctx, answerId: string, text: string): Promise<Answer> {
   const a = await ctx.store.get("answers", answerId);
-  if (!a) throw new Error("Answer not found");
+  if (!a) throw new UserError("Answer not found");
   const next: Answer = { ...a, answer: text.trim(), status: text.trim() ? "ANSWERED" : "NEEDS_USER", source: "USER", updatedAt: ctx.now().toISOString() };
   await ctx.store.put("answers", next);
   return next;

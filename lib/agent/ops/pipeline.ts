@@ -11,6 +11,7 @@ import { normalizeJob, type RawJob } from "../jobs/normalize";
 import { buildMatch } from "../matching/score";
 import { newId } from "../store/store";
 import type { Job, Source } from "../types";
+import { UserError } from "../errors";
 import { audit } from "./audit";
 import { notify } from "./notify";
 import { redactSecrets } from "../llm/safety";
@@ -196,6 +197,30 @@ export async function screenAll(ctx: Ctx): Promise<{ screened: number; qualified
   return { screened: jobs.length, qualified };
 }
 
+/** Prepare one job: tailored CV, cover letter, standard answers, and move it to review. Used by the pipeline and by "Prepare" in the UI. */
+export async function prepareJob(ctx: Ctx, jobId: string, opts: { regenerate?: boolean } = {}) {
+  const job = await ctx.store.get("jobs", jobId);
+  if (!job) throw new UserError("Job not found");
+  if (job.descriptionMissing) throw new UserError("This job has no description yet. Paste the description first.");
+  const m = await ctx.store.get("matches", `m_${jobId}`);
+  const app = await ensureApplication(ctx, jobId);
+  const cv = await generateCvVersion(ctx, jobId, opts.regenerate ? { origin: "REGENERATED" } : {});
+  const letter = await generateCoverLetter(ctx, jobId);
+  await answerQuestions(ctx, app.id, STANDARD_QUESTIONS.map((text) => ({ text })));
+  let cur = (await ctx.store.get("applications", app.id))!;
+  if (["DISCOVERED", "SCREENED"].includes(cur.status)) cur = await transition(ctx, app.id, "QUALIFIED", "USER", "Prepared manually");
+  if (cur.status === "QUALIFIED") cur = await transition(ctx, app.id, "CV_GENERATED", "SYSTEM", `CV v${cv.version} generated`);
+  cur = (await ctx.store.get("applications", app.id))!;
+  await ctx.store.put("applications", { ...cur, cvVersionId: cv.id, coverLetterId: letter.id });
+  if (cv.validation.pass && cur.status === "CV_GENERATED") {
+    await transition(ctx, app.id, "READY_FOR_REVIEW", "SYSTEM", "Awaiting your review");
+    await notify(ctx, { type: "APPROVAL_REQUIRED", title: `CV ready for review: ${job.title} at ${job.employer}`, body: `Match ${m?.score ?? "?"}%. Review and approve in CV Studio.`, entityId: cv.id });
+  } else if (!cv.validation.pass && cur.status === "CV_GENERATED") {
+    await transition(ctx, app.id, "NEEDS_ATTENTION", "SYSTEM", "Generated CV failed claim validation");
+  }
+  return { cv, letter, applicationId: app.id };
+}
+
 /** Generate a tailored CV, cover letter and prepared answers for qualified jobs that have none yet. */
 export async function generateForQualified(ctx: Ctx, opts: { limit?: number } = {}): Promise<{ generated: number; failed: number }> {
   const prefs = await ctx.store.get("preferences", "prefs");
@@ -210,21 +235,10 @@ export async function generateForQualified(ctx: Ctx, opts: { limit?: number } = 
     if (existing.has(m.jobId)) continue;
     const app = await ensureApplication(ctx, m.jobId);
     if (app.status !== "QUALIFIED") continue;
+    const job = await ctx.store.get("jobs", m.jobId);
+    if (!job || job.descriptionMissing) continue;
     try {
-      const job = (await ctx.store.get("jobs", m.jobId))!;
-      if (job.descriptionMissing) continue;
-      const cv = await generateCvVersion(ctx, m.jobId);
-      const letter = await generateCoverLetter(ctx, m.jobId);
-      await answerQuestions(ctx, app.id, STANDARD_QUESTIONS.map((text) => ({ text })));
-      await transition(ctx, app.id, "CV_GENERATED", "SYSTEM", `CV v${cv.version} generated`);
-      const cur = (await ctx.store.get("applications", app.id))!;
-      await ctx.store.put("applications", { ...cur, cvVersionId: cv.id, coverLetterId: letter.id });
-      if (cv.validation.pass) {
-        await transition(ctx, app.id, "READY_FOR_REVIEW", "SYSTEM", "Awaiting your review");
-        await notify(ctx, { type: "APPROVAL_REQUIRED", title: `CV ready for review: ${job.title} at ${job.employer}`, body: `Match ${m.score}%. Review and approve in CV Studio.`, entityId: cv.id });
-      } else {
-        await transition(ctx, app.id, "NEEDS_ATTENTION", "SYSTEM", "Generated CV failed claim validation");
-      }
+      await prepareJob(ctx, m.jobId);
       generated++;
     } catch (e) {
       failed++;

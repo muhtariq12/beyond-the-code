@@ -47,6 +47,11 @@ export function evaluateEligibility(inp: EligibilityInput): EligibilityOutcome {
   const { job, profile, prefs, applications, now } = inp;
   const checks: Check[] = [];
 
+  // content safety: text aimed at AI readers is never obeyed, but it needs a human look
+  if (job.injectionSignals.length) {
+    checks.push(check("content", "Posting content", "UNKNOWN", `Contains text addressed to AI systems (${job.injectionSignals.join(", ")}). It was ignored for screening; read the posting yourself before applying.`));
+  }
+
   // availability
   if (job.availability === "CLOSED" || (job.expiresAt && new Date(job.expiresAt) < now)) {
     checks.push(check("availability", "Listing availability", "FAIL", "The listing is closed or has expired."));
@@ -87,7 +92,7 @@ export function evaluateEligibility(inp: EligibilityInput): EligibilityOutcome {
 
   const months = prefs.candidateYearsOverride != null ? prefs.candidateYearsOverride * 12 : professionalMonths(profile, now);
   if (job.experienceYearsMin == null) {
-    checks.push(check("years", "Years of experience", "UNKNOWN", "No explicit years requirement stated."));
+    checks.push(check("years", "Years of experience", "PASS", "No explicit years-of-experience requirement stated."));
   } else if (months == null) {
     checks.push(check("years", "Years of experience", "UNKNOWN", `Requires ${job.experienceYearsMin}+ years; your verified employment dates are not available to compare.`));
   } else {

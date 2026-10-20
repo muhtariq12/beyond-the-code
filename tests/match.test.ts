@@ -127,10 +127,16 @@ describe("Stage B: relevance scoring", () => {
 });
 
 describe("prompt-injection in job text is data only", () => {
-  it("flags injection signals and never changes scoring facts", async () => {
+  it("flags injection signals, ignores them for screening, and sends the job to human review", async () => {
     const j = find(await jobs(), "AI Engineer");
     expect(j.injectionSignals).toEqual(expect.arrayContaining(["ignore-previous-instructions"]));
+    // the injected sentence mentions a PhD and Kubernetes; neither may become a requirement
+    expect(j.requiredDegree).not.toBe("PHD");
+    expect(j.requiredSkills).not.toContain("Kubernetes");
     const m = buildMatch(base(j));
+    expect(m.eligibility).toBe("UNCERTAIN");
+    expect(m.checks.find((c) => c.id === "content")?.result).toBe("UNKNOWN");
+    expect(m.recommendation).not.toBe("APPLY");
     expect(m.matched.flatMap((x) => x.evidence).join(" ")).not.toMatch(/10 years|MIT/);
     expect(m.matched.map((x) => x.requirement)).not.toContain("Kubernetes");
   });

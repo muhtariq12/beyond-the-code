@@ -227,3 +227,18 @@ describe("versioning, approval and immutability", () => {
     expect(audits).toEqual(expect.arrayContaining(["cv.generated", "cv.approved"]));
   });
 });
+
+describe("cover letters", () => {
+  it("uses only verified facts and makes no salary, visa, relocation or availability commitments", async () => {
+    const { generateCoverLetter } = await import("@/lib/agent/cv/letter");
+    const { ctx, job } = await setup();
+    const letter = await generateCoverLetter(ctx, job.id);
+    expect(letter.validation.pass).toBe(true);
+    expect(letter.text).toContain("Acme AI");
+    expect(letter.text).toMatch(/RAG|LLM integration|Python/);
+    expect(letter.text).not.toMatch(/salary|AED|visa|sponsor|relocat|notice period|available (from|to start)|years of experience/i);
+    const profile = (await ctx.store.get("profile", "profile"))!;
+    for (const id of letter.factIds) expect(profile.facts.find((f) => f.id === id)?.verified).toBe(true);
+    for (const d of [letter.pdfDocId, letter.docxDocId]) expect((await ctx.store.get("documents", d!))?.filename).toMatch(/^Acme_AI_Applied_AI_Engineer_CoverLetter_2026-10-20\.(pdf|docx)$/);
+  });
+});

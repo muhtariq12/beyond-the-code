@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError, type ZodType } from "zod";
 import { ApprovalError } from "./cv/service";
+import { UserError } from "./errors";
 import { UploadError } from "./profile/extract";
 import { TransitionError } from "./apply/status";
 import { SubmissionBlocked } from "./apply/submit";
@@ -13,6 +14,8 @@ import type { Ctx } from "./ctx";
 
 interface Opts<S> {
   schema?: ZodType<S>;
+  /** handler reads the request itself (multipart uploads) */
+  raw?: boolean;
   /** requests per minute per client; default 60 */
   perMinute?: number;
   name: string;
@@ -26,7 +29,7 @@ export function errorResponse(e: unknown): NextResponse {
   if (e instanceof ZodError) return NextResponse.json({ error: "Invalid input", issues: e.issues.map((i) => `${i.path.join(".")}: ${i.message}`) }, { status: 400 });
   if (e instanceof SubmissionBlocked) return NextResponse.json({ error: e.message, code: e.code, details: e.details }, { status: 409 });
   if (e instanceof ApprovalError || e instanceof TransitionError || e instanceof ImmutableViolation) return NextResponse.json({ error: e.message }, { status: 409 });
-  if (e instanceof UploadError) return NextResponse.json({ error: e.message }, { status: 400 });
+  if (e instanceof UploadError || e instanceof UserError) return NextResponse.json({ error: e.message }, { status: 400 });
   console.error("[agent api]", redactSecrets((e as Error)?.stack ?? String(e)).slice(0, 800));
   return NextResponse.json({ error: "Something went wrong. Check the server log." }, { status: 500 });
 }

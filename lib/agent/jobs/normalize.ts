@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { norm, normalizeWhitespace } from "../text";
+import { htmlToText, norm, normalizeWhitespace, stripControl } from "../text";
 import { extractSkills } from "../skills";
 import { detectInjection } from "../llm/safety";
 import type { Job, RemoteMode, Salary } from "../types";
@@ -59,6 +59,8 @@ export function splitRequirementSections(desc: string): { required: string[]; pr
   for (const rawLine of desc.split("\n")) {
     const line = rawLine.trim();
     if (!line) continue;
+    // Lines that try to instruct an AI reader are never treated as requirements.
+    if (detectInjection(line).length) continue;
     const isHeading = line.length < 90 && !/[.;]$/.test(line) || /:$/.test(line);
     if (isHeading && H_PREF.test(line)) section = "PREFERRED";
     else if (isHeading && H_REQ.test(line)) {
@@ -97,8 +99,8 @@ export function parseEmploymentType(text: string, hint?: string | null): string 
   const t = `${hint ?? ""} ${text.slice(0, 800)}`.toLowerCase();
   if (/\bintern(ship)?\b/.test(t)) return "INTERNSHIP";
   if (/\bcontract(or)?\b|fixed[- ]term|freelance|\bc2c\b/.test(t)) return "CONTRACT";
-  if (/\bpart[- ]time\b/.test(t)) return "PART_TIME";
-  if (/\bfull[- ]time\b|permanent/.test(t)) return "FULL_TIME";
+  if (/\bpart[-_ ]?time\b/.test(t)) return "PART_TIME";
+  if (/\bfull[-_ ]?time\b|permanent/.test(t)) return "FULL_TIME";
   return "UNKNOWN";
 }
 
@@ -122,7 +124,9 @@ export interface RawJob {
 }
 
 export function normalizeJob(raw: RawJob): Job {
-  const description = normalizeWhitespace(raw.descriptionText);
+  // Untrusted text: strip control characters and any markup so it is only ever stored (and later rendered) as inert text.
+  const cleaned = stripControl(raw.descriptionText);
+  const description = /<[a-z!/][^>]*>/i.test(cleaned) ? htmlToText(cleaned) : normalizeWhitespace(cleaned);
   const sections = splitRequirementSections(description);
   const reqSkills = new Set(extractSkills(sections.required.join("\n")));
   const prefSkills = new Set(extractSkills(sections.preferred.join("\n")));
