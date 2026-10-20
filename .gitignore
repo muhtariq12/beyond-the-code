@@ -9,3 +9,7 @@ next-env.d.ts
 .DS_Store
 npm-debug.log*
 coverage
+
+# local agent data (CVs, jobs, generated documents) - never commit
+/data/
+*.local.pdf

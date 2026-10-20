@@ -1,0 +1,33 @@
+ALEX SAMPLE
+AI Engineer | Software Developer
+Dubai, UAE | +971 50 000 0000 | alex.sample@example.com | linkedin.com/in/alex-sample
+SUMMARY
+AI Engineer at Example Corp. I build practical software that connects business data to language models. BSc Computer Science (Data Science and AI), graduated June 2026.
+WORK EXPERIENCE
+AI Engineer | Platform Team, Example Corp, UAE Aug 2026 – Present
+• Build internal web applications for a group of 5 companies, from requirements through to testing, using Python and React.
+• Designed and shipped a RAG assistant over company documents using embeddings and a PostgreSQL vector store.
+• Integrated NetSuite data into internal tools through REST APIs.
+Software Engineering Intern | Sample Labs LLC Jun 2026 – Oct 2026
+• Built and tested LLM workflow automations with Docker and cloud integrations. Worked with the founder on 3 projects.
+Freelance Web Developer | Sample Furniture Aug 2025 – Sep 2025
+• Rebuilt a client website from scratch and added third-party payment options.
+PROJECTS
+Quoter (Final Year Project) | Python, Next.js, Supabase, Twilio
+• Transcribes a sales call, extracts quote details with an LLM and drafts a quotation. Led a team of 4.
+PriceModel | Python, PyTorch, Pandas
+• Predicts property price per square metre from about 20,000 transactions. The model reached RMSE 1,200 and R2 0.81.
+SKILLS
+Languages: Python, TypeScript, JavaScript, SQL
+Web and Backend: React, Next.js, Node.js, FastAPI, REST APIs
+Databases: PostgreSQL, MySQL, Supabase
+AI and ML: LLM integration, AI agents, RAG, fine-tuning (LoRA), PyTorch, Scikit-learn
+Data and Tools: Pandas, Git, Docker
+EDUCATION
+Bachelor of Computer Science, Data Science and Artificial Intelligence 2022 – 2026
+Example University | Distinction | Graduated June 2026
+PUBLICATION
+Quoter: A Multi-Agent System for Quotation Generation. Example Student Conference, 2026.
+CERTIFICATIONS AND LEADERSHIP
+Example AI Course, Cloud Foundations, IELTS 8.0
+Best Speaker award for a talk at an industry panel (2025)

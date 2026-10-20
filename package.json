@@ -10,12 +10,18 @@
   },
   "description": "An interactive essay about what makes software hard to ship, even with AI coding agents.",
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "docx": "^9.13.0",
     "geist": "^1.7.2",
+    "jszip": "^3.10.2",
     "next": "^15.5.27",
+    "pdf-lib": "^1.17.1",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
     "@eslint/eslintrc": "^3.3.7",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20.19.43",
@@ -25,7 +31,10 @@
     "eslint-config-next": "^15.5.27",
     "postcss": "^8.5.29",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3"
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "unpdf": "^1.9.1",
+    "vitest": "^3.2.7"
   },
   "private": true,
   "engines": {
