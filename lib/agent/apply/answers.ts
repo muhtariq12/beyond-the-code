@@ -7,12 +7,12 @@ import { verifiedEntries } from "../profile/facts";
 import type { Answer, AnswerCategory, Preferences, Profile } from "../types";
 
 const RULES: [AnswerCategory, RegExp][] = [
-  ["DEMOGRAPHIC", /\b(gender|ethnic|race|racial|religio|disabilit|veteran|sexual orientation|marital|pronoun|date of birth|age\b|nationality)\b/i],
+  ["DEMOGRAPHIC", /\b(gender|ethnic\w*|race|racial|religio\w*|disabilit\w*|veteran|sexual orientation|marital|pronoun|date of birth|age|nationality)\b/i],
   ["CLEARANCE", /\bclearance\b/i],
   ["SPONSORSHIP", /\b(sponsor(ship)?|visa)\b/i],
   ["WORK_AUTHORIZATION", /\b(authori[sz]ed|legally|right to work|work permit|eligib\w* to work|employment eligibility)\b/i],
   ["SALARY", /\b(salary|compensation|pay expectation|expected (pay|ctc)|remuneration)\b/i],
-  ["RELOCATION", /\b(relocat|willing to move)\b/i],
+  ["RELOCATION", /\b(relocat\w*|willing to move)\b/i],
   ["NOTICE_PERIOD", /\b(notice period|start date|when can you start|availability to start|earliest start)\b/i],
   ["LEGAL", /\b(certify|attest|declare|acknowledge|i agree|consent|background check|criminal|convicted|non-?compete|terms and conditions|privacy policy)\b/i],
   ["YEARS_EXPERIENCE", /\bhow many years\b|\byears of (relevant |professional |work )?experience\b/i],
